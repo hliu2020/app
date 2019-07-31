@@ -29,13 +29,17 @@ navbarPage("ShinyGene",
                      sidebarPanel(
                          h3("Summary analysis"),
                          selectizeInput("gene", "Gene symbol", selected = "GREM2", choices = levels(as.factor(names(nki)))),
+ #                        br(),
+  #                       selectInput("group","Group:", choices = c("er","os","grade")),
+                         
                          br(),
-                         checkboxInput("os", h4("Survival Status", style = "color:red;")),
-                         br(),
-                         # Only show this panel if the box checked
-                         conditionalPanel(condition = "input.os == true",
-                                          checkboxInput("grade", "Also change symbol based on grade?")
+                         selectInput("plot.type","Plot Type:",
+                                     list(boxplot = "boxplot", histogram = "histogram", density = "density", bar = "bar")
                          )
+                         # Only show this panel if the box checked
+#                        conditionalPanel(condition = "input.os == true",
+#                                          checkboxInput("grade", "Also change symbol based on grade?")
+                         
                          
                      ),
                      mainPanel(
@@ -52,7 +56,7 @@ navbarPage("ShinyGene",
                      sidebarPanel(
                        helpText(paste("Select distance:" )),
                        fluidRow(
-                         selectInput("dmeth", NULL, choices=dmeths,
+                       selectInput("dmeth", NULL, choices=dmeths,
                                      selected=dmeths[1])),
                        helpText(paste("Select clustering method:" )),
                        fluidRow(
@@ -84,13 +88,12 @@ navbarPage("ShinyGene",
 
 #----tab4-------------------------------------
 tabPanel("Modeling",
-                 headerPanel("Intro to Iris Dataset"),
+                 headerPanel("ML analysis"),
                  sidebarPanel(
-                           h3('Tweek the Plot'),
+                           h3('Gene selection for ML analysis'),
+                           h3(''),                           
+                           uiOutput("choose_genes"),
                            h3(''),
-                           selectInput('x','X-axis',names(nki),selected  = "GREM2"),
-                           selectInput('y','Y-axis',names(nki),selected = "SUHW2"),
-
                            h3('Machine Learning'),
                            h3(''),
                            sliderInput('size', 'Choose sample size for training data ', min=0.2, max=0.9,
@@ -99,58 +102,46 @@ tabPanel("Modeling",
                                        selected = "rf"),
                            conditionalPanel(condition = "input.z == 'rf'",
                                             sliderInput('m','Select mtry',min=1, max=20,
-                                                        value=min(1, 20), step=1))
+                                                        value=min(1, 20), step=1)),
+                           h3(''),
+                           h3('Tweek the Plot'),                           
+                           uiOutput("gene_xaxis"),
+                           uiOutput("gene_yaxis"),
+                           downloadButton(outputId = "downloadPlot4", label = "Download the plot"),
+                           h3('Math formula'),
+                           uiOutput('ex1')
                          ),
                  mainPanel(
+                   tabsetPanel(
+                     tabPanel("ML analysis",
 #                           h2('Introductory Exploratory Analysis'),
-                           
 #                           plotOutput("mlplot"),
-                           
                            h4('Let\'s develop a machine learning algorithm to predict ER status. In this example, we will use all
                            200 features to develop our model. Choose the method from the sidebar.'),  
                            
-                           h2('Predicting ER status'),
+                           h4('Training plot'),
                            
                            h4(''),
-                           
-                           plotOutput("mlplot"),                           
+                           plotOutput("mlplot",click = "plot_click",  
+                                      hover = hoverOpts(id = "plot_hover", delayType = "throttle")),
+                           column(width = 4,  verbatimTextOutput("plot_clickinfo"),
+                          verbatimTextOutput("plot_hoverinfo")),
 
-                           h4('Confusion matrix'),                   
+                           h4(''),
+                           h3('Prediction confusion matrix'),                   
                            verbatimTextOutput('confusionmatrix'),
-                           
                            h4('We can also see which data points are tuely/falsely predicted'),
-                           
                            plotOutput("mlplot2")  
-
-                          
-                          
-                           
-
-                           
-                )
+                      ),
+                     tabPanel("Data download",
+                           div(style = 'height:300px; width:600px;overflow-y;overflow-y: scroll', 
+                               tableOutput("table3")),
+                           downloadLink("downloadDataML", "Download data in ML analysis")
+                     )))
 ),
 
-#-----tab5-------------------------------------
-      tabPanel("Data output",
-               fluidRow(column(
-                   12, h3("Extract selected data"),
-                   sidebarLayout(
-                       sidebarPanel(
-                           h3("Select interested genes:"),
-                           selectInput("gene2", "Gene symbol", selected = "GREM2", choices = levels(as.factor(names(nki))),
-                                          multiple = TRUE),
-                           downloadLink("downloadData", "Download")
-                       ),
-                       mainPanel(
-                         div(style = 'height:600px; width:600px;overflow-y: scroll', 
-                             tableOutput("table"))
-                       )
-                   )   
-                   
-               ))
 
-      ),
-#-----tab6-------------------------------------      
+#-----tab5-------------------------------------      
       tabPanel("Acknowledgement",
                div(id = "description",
                    p("The code for cluster  were revised from the code in this online book: "),
