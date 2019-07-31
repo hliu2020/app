@@ -21,38 +21,49 @@ shinyServer(function(input, output, session) {
   #---------------------subset data---------
   getData <- reactive({
             nki %>% subset(select=c(input$gene,"er","os","grade"))
-	})  
-  getData2 <- reactive({
-  	        nki %>% subset(select=c("id",input$gene2,"er","os","grade"))
-   	})
-
-
-##--------- tab2 data summary characteristics--------------------
-#create plot  
-  boxplot1 <- function(){
+	})
+ 
+  plottype2 <- reactive({      
+    switch(input$plottype,
+           "boxplot" = "boxplot",
+           "histogram" = "histogram",
+           "density" = "density",
+           "scatter" = "scatter")
+  })
+   
+  boxplot2 <- function(){
+    plottype <- plottype2()
     newData <- getData()
-        attach(newData)
+    #    attach(newData)
     gene1<- input$gene
- #   status <- input$group
     df1 <- newData[,c("er",gene1)]
-    #df1$er <- factor(df1$er)
-    colnames(df1)<-c("er","gene1")
-#    plot.type <- switch(input$plot.type,
-#                      "boxplot" 	= geom_boxplot(y=gene1),
-#                      "histogram" =	geom_histogram(x=gene1,alpha=0.5,position="identity"),
-#                      "density" 	=	geom_density(alpha=.75),
-#                      "bar" 		=	geom_bar(position="dodge"))    
     df1$er <- factor(df1$er)
     colnames(df1)<-c("er","gene1")
-    g <- ggplot(df1, aes(er,gene1)) + geom_boxplot(outlier.colour = "orange", outlier.shape = 1) + # plot.type +
-      labs(title = paste("Plot of of the mRNA expression", input$gene, "between ER status"),y=input$gene,x="ER status")
-  }
+
+    # plot.type 
+    lab <- labs(title = paste("Plot of of the mRNA expression", gene1, "between ER status"),y=gene1,x="ER status")
+    g1 <- ggplot(newData, aes_string(er,gene1)) + geom_boxplot(outlier.colour = "orange") +
+      geom_point(aes(color = factor(er+1)),position = position_jitterdodge(jitter.width = 0.2))
+    g2 <- ggplot(newData, aes_string(x=gene1)) + geom_histogram(aes(color=factor(er+1),fill=factor(er+1)),alpha=0.5,position="identity")
+    g3 <- ggplot(newData, aes_string(group=factor(er),x=gene1)) + geom_density(aes(color=factor(er+1)),alpha=.75)
+    g4 <- ggplot(newData, aes_string(x=er, y=gene1)) + geom_point(aes(color = factor(er+1)),position = position_jitterdodge(jitter.width = 0.2))
+    glist<- list(boxplot=g1+lab, histogram=g2,density=g3, scatter=g4)
   
+#    df1$er <- factor(df1$er)
+  return(glist[[plottype]])
+    }
+
   output$boxplot1 <- renderPlot({
-  	g <- boxplot1()
-  	g
+   g1 <- boxplot2()
+   g1
   })
+  
   # Generate a summary of the data
+  #title
+  output$title1 <- renderText({
+    paste("Summary of the mRNA expression of", input$gene)
+  })  
+  
   output$summaryT <- renderPrint({
     newData <- getData()
     gene1<- input$gene
@@ -223,7 +234,7 @@ output$ex1 <- renderUI({
 
  
   
-  #------------------Download boxplot ---------------  
+  #------------------tab2 -- Download  plot ---------------  
   output$downloadPlot <- downloadHandler(
     filename = function() {
       paste("boxplot", '.png', sep='')
