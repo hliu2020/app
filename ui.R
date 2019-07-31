@@ -11,16 +11,17 @@ navbarPage("ShinyGene",
           h3("About the dataset"), 
           p("The data is a subset (1000 genes) of the nki data from the R package 'breastCancerNKI'. Briefly, this dataset 
             comprises the gene expression profiling of 337 breast cancer patients. There is extensive clinical data available, 
-            but we will only focus on the ER (Estrogen Receptor) status, grade and overall survival of each patient. The two
-           variables (ER: either positive or negative; grade: 1-3) are known to predict survival."),
+            but we will only focus on the ER (Estrogen Receptor) status this time. This variable had significant correlation 
+            with survival status. In this future, we will also include the analysis of gene expression with ER, HER2, OS, PFS 
+            and their correlation with each other."),
           p("The original data could be found in the package below:"),
           tags$a(href="http://bioconductor.org/packages/release/data/experiment/html/breastCancerNKI.html", " breastCancerNKI"),
            
            h3("About the APP"), 
            p("In this project, we sought to produce a tool that will explore the normalized RNA expression data and their
-              correlations with ER status by using two machine learning methods: tree and boosting. Finally, the user may 
-              view a table of the genes selected by the threshold they have set and these may be downloaded as a CSV file 
-              with a button at the bottom of the sidebar.")
+             correlations with ER status by using two machine learning methods: tree and random forest. Finally, the user may 
+             view a table of the genes selected and these may be downloaded as a CSV file with a button at the bottom of the 
+             sidebar.")
 
           )),
 #------tab2-------------------------------------------
@@ -33,18 +34,18 @@ navbarPage("ShinyGene",
   #                       selectInput("group","Group:", choices = c("er","os","grade")),
                          
                          br(),
-                         selectInput("plot.type","Plot Type:",
-                                     list(boxplot = "boxplot", histogram = "histogram", density = "density", bar = "bar")
+                         selectInput("plottype","Plot Type:",
+                                     list(boxplot = "boxplot", histogram = "histogram", density = "density", scatter = "scatter")
                          )
                          # Only show this panel if the box checked
 #                        conditionalPanel(condition = "input.os == true",
 #                                          checkboxInput("grade", "Also change symbol based on grade?")
                          
-                         
                      ),
                      mainPanel(
                          plotOutput("boxplot1"),
                          downloadButton(outputId = "downloadPlot", label = "Download the plot"),
+                         h3(''),
                          textOutput("title1"),
                          verbatimTextOutput("summaryT")
                      )
@@ -144,7 +145,7 @@ tabPanel("Modeling",
 #-----tab5-------------------------------------      
       tabPanel("Acknowledgement",
                div(id = "description",
-                   p("The code for cluster  were revised from the code in this online book: "),
+                   p("The code for cluster  was revised from the code in this online book: "),
                tags$a(href="https://genomicsclass.github.io/book/pages/bioc2_shiny.html", "Biomedical Data Science")
     )
 )
