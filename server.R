@@ -80,15 +80,10 @@ shinyServer(function(input, output, session) {
 
 #source("ml_nki.R")  
 
-  df_pred <- nki[,c(1:200,202)]
+  df <- nki[,c(1:200,202)] %>% mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .)) %>% na.omit() 
 #  df_pred$er <- factor(df_pred$er)
- output$mlplot <- renderPlot({ function() {
-     df_pred <- nki[,c(1:200,202)]
-     ggplot(data = df_pred, aes_string(x = input$x , y = input$y)) + aes(color = df_pred$er) + 
-     geom_point(lwd = 4) +theme(text = element_text(size=20))
-     }
-  })
-  
+
+    
   
   inTrain <- reactive({
     set.seed(123)
@@ -96,49 +91,54 @@ shinyServer(function(input, output, session) {
     inTrain
   })
   
+ 
   
   getFit <- reactive({
-    df_pred <- nki[,c(1:200,202)]
-    df_pred %>%  mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .)) %>% na.omit() -> df
-    df$er <- factor(df_pred$er)
+    df$er <- factor(df$er)
     training <- df[inTrain(),]
-    training$er <- factor(training$er, levels=c("0","1"))
+    #  training$er <- factor(training$er, levels=c("0","1"))
+    #  df$er <- factor(df$er)
+    testing <- df[-inTrain(),] 
     if(input$z == 'rf'){
-              modelFit <- randomForest(er ~., data = training, na.action=na.exclude, ntree=500,mtry=input$m)
-    } else {modelFit <- rpart(er ~ ., data = training, method="class",control=rpart.control(minsplit=5,cp=0.001),
-                              na.action=na.rpart)
+              modelFit <- randomForest(er ~., data = training, ntree=500,mtry=input$m)
+    } else {modelFit <- rpart(er ~ ., data = training, method="class",control=rpart.control(minsplit=5,cp=0.001))
    modelFit 
    }
 
 
   })
-  
+  mlplot <-  function() {
+  plot(getFit())
+  }  
+  output$mlplot <- renderPlot({
+    mlplot()
+  })
+
+    
   output$confusionmatrix <- renderPrint({
     df_pred <- nki[,c(1:200,202)]
     df_pred %>%  mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .)) %>% na.omit() -> df
      df$er <- factor(df$er)
-     training <- df[inTrain(),]
      testing <- df[-inTrain(),]
-    testing$er <- factor(testing$er, levels=c("0","1"))
-    predictions <- predict(getFit(), newdata = testing, na.action = na.pass)
+    predictions <- predict(getFit(), newdata = testing, type="class")
     
     confusionMatrix(predictions, as.factor(testing$er))
-    #table(predictions, as.factor(testing$er))
   })
-
-mlplot <-  function() {
+  
+  mlplot2 <-  function() {
     df_pred <- nki[,c(1:200,202)]
     df_pred %>%  mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .)) %>% na.omit() -> df
     df$er <- factor(df$er)
     testing <- df[-inTrain(),]
     predictions <- predict(getFit(), newdata = testing)
-#    testing$predRight <- ifelse(predictions == as.factor(testing$er),1,0)
-#    ggplot(data = testing, aes_string(x = input$x , y = input$y)) + aes(color = predRight) + geom_point(lwd = 4) +theme(text = element_text(size=20))
-     plot(getFit())
-     }  
+    testing$predRight <- ifelse(predictions == as.factor(testing$er),1,0)
+    ggplot(data = testing, aes_string(x = input$x , y = input$y)) + aes(color = predRight) + geom_point(lwd = 4) +theme(text = element_text(size=20))
+
+  }  
   output$mlplot2 <- renderPlot({
-    mlplot()
-    })
+    mlplot2()
+  }) 
+
   
 ##--------- tab5 data subset export--------------------  
   #update title info

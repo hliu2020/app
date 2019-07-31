@@ -86,10 +86,10 @@ navbarPage("ShinyGene",
 tabPanel("Modeling",
                  headerPanel("Intro to Iris Dataset"),
                  sidebarPanel(
-#                           h3('Tweek the Plot'),
-#                           h3(''),
-#                           selectInput('x','X-axis',names(nki),selected  = "GREM2"),
-#                           selectInput('y','Y-axis',names(nki),selected = "SUHW2"),
+                           h3('Tweek the Plot'),
+                           h3(''),
+                           selectInput('x','X-axis',names(nki),selected  = "GREM2"),
+                           selectInput('y','Y-axis',names(nki),selected = "SUHW2"),
 
                            h3('Machine Learning'),
                            h3(''),
@@ -106,18 +106,26 @@ tabPanel("Modeling",
                            
 #                           plotOutput("mlplot"),
                            
-                           h2('Predicting ER status'),
-                           
                            h4('Let\'s develop a machine learning algorithm to predict ER status. In this example, we will use all
-                           200 features to develop our model. Choose the method from the sidebar.'),
+                           200 features to develop our model. Choose the method from the sidebar.'),  
                            
-                           verbatimTextOutput('confusionmatrix'),
+                           h2('Predicting ER status'),
                            
                            h4(''),
                            
+                           plotOutput("mlplot"),                           
+
+                           h4('Confusion matrix'),                   
+                           verbatimTextOutput('confusionmatrix'),
+                           
                            h4('We can also see which data points are tuely/falsely predicted'),
                            
-                           plotOutput("mlplot2")
+                           plotOutput("mlplot2")  
+
+                          
+                          
+                           
+
                            
                 )
 ),
